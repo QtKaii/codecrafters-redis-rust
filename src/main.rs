@@ -13,14 +13,16 @@ fn main() {
 
     let ping_response = b"+PONG\r\n";
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut stream) => {
-                println!("Accepted Connection!");
-                stream.write(ping_response).unwrap();
-            }
-            Err(e) => {
-                println!("error: {}", e);
+    loop {
+        for stream in listener.incoming() {
+            match stream {
+                Ok(mut stream) => {
+                    println!("Accepted Connection!");
+                    stream.write(ping_response).unwrap();
+                }
+                Err(e) => {
+                    println!("error: {}", e);
+                }
             }
         }
     }
