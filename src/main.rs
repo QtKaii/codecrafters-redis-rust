@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write};
 // Uncomment this block to pass the first stage
 use std::net::TcpListener;
 
@@ -13,17 +13,19 @@ fn main() {
 
     let ping_response = b"+PONG\r\n";
 
-    loop {
         for stream in listener.incoming() {
             match stream {
                 Ok(mut stream) => {
                     println!("Accepted Connection!");
-                    stream.write(ping_response).unwrap();
+                    loop {
+                        let mut buf: [u8; 1000] = [0; 1000];
+                        stream.read(&mut buf).unwrap();
+                        stream.write(ping_response).unwrap();
+                    }
                 }
                 Err(e) => {
                     println!("error: {}", e);
                 }
             }
         }
-    }
 }
