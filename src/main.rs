@@ -13,19 +13,25 @@ fn main() {
 
     let ping_response = b"+PONG\r\n";
 
-        for stream in listener.incoming() {
-            match stream {
-                Ok(mut stream) => {
-                    println!("Accepted Connection!");
+    for stream in listener.incoming() {
+        match stream {
+            Ok(mut stream) => {
+                println!("Accepted Connection!");
+                loop {
+                    let mut buf: [u8; 1000] = [0; 1000];
+
                     loop {
-                        let mut buf: [u8; 1000] = [0; 1000];
-                        stream.read(&mut buf).unwrap();
-                        stream.write(ping_response).unwrap();
+                        let bytes_read = stream.read(&mut buf).unwrap();
+                        if bytes_read == 0 {
+                            println!("client closed the connection");
+                            break;
+                        }
                     }
                 }
-                Err(e) => {
-                    println!("error: {}", e);
-                }
+            }
+            Err(e) => {
+                println!("error: {}", e);
             }
         }
+    }
 }
