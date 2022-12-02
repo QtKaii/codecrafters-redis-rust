@@ -1,37 +1,43 @@
-use std::io::{Read, Write};
-// Uncomment this block to pass the first stage
-use std::net::TcpListener;
+use anyhow::Result;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
-fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    println!("Logs from your program will appear here!");
+#[tokio::main]
+async fn main() -> Result<()> {
 
-    // Uncomment this block to pass the first stage
-    //
-    let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
-    //
+    let mut listener = TcpListener::bind("127.0.0.1:6379").await?;
 
     let ping_response = b"+PONG\r\n";
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut stream) => {
-                println!("Accepted Connection!");
-                loop {
-                    let mut buf: [u8; 1000] = [0; 1000];
-
-                    loop {
-                        let bytes_read = stream.read(&mut buf).unwrap();
-                        if bytes_read == 0 {
-                            println!("client closed the connection");
-                            break;
-                        }
-                    }
-                }
-            }
+    loop {
+        let incoming = listener.accept().await;
+        match incoming {
+            ok(mut strem, _) => {
+                tokio::spawn(async move {
+                    handle_connection(&mut stream).await.unwrap();
+                })
+            },
             Err(e) => {
-                println!("error: {}", e);
+                println!("Error: {}", e)
             }
         }
     }
+}
+
+async fn handle_connection(stream: &mut TcpStream) -> Result<()> {
+    let mut buf = [0;512];
+
+    let response = b"+PONG\r\n";
+
+    loop {
+        let b_read = stream.read(&mut buf).await?;
+        if b_read == 0 {
+            println!("Client closed the connection");
+            break;
+        }
+
+        stream.write(response).await?
+    }
+
+    Ok(())
 }
